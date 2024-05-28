@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Decomment", "Decomment\Decomment.fsproj", "{BFC74669-44FE-4425-B55E-12AE2D57F899}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DecommentTest", "DecommentTest\DecommentTest.fsproj", "{F7D9372E-7D05-48A1-B0E2-22E970FC12C9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BFC74669-44FE-4425-B55E-12AE2D57F899}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFC74669-44FE-4425-B55E-12AE2D57F899}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFC74669-44FE-4425-B55E-12AE2D57F899}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFC74669-44FE-4425-B55E-12AE2D57F899}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7D9372E-7D05-48A1-B0E2-22E970FC12C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7D9372E-7D05-48A1-B0E2-22E970FC12C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7D9372E-7D05-48A1-B0E2-22E970FC12C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7D9372E-7D05-48A1-B0E2-22E970FC12C9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

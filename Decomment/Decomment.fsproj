@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net7.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="ResultMd.fs" />
+        <Compile Include="PathMd.fs" />
+        <Compile Include="TextMd.fs" />
+        <Compile Include="DecommentMd.fs" />
+        <Compile Include="Program.fs"/>
+    </ItemGroup>
+
+</Project>
