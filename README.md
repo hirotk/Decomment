@@ -1,8 +1,5 @@
 # Decomment
-<img src="https://img.shields.io/badge/FSharp-7.0-purple">
-<img src="https://img.shields.io/badge/NUnit-3.13.3-yellow">
-<img src="https://img.shields.io/badge/DotNet-7.0-green">
-<img src="https://img.shields.io/badge/License-MIT-blue">
+<img src="https://img.shields.io/badge/FSharp-7.0-purple"> <img src="https://img.shields.io/badge/NUnit-3.13.3-yellow"> <img src="https://img.shields.io/badge/DotNet-7.0-green"> <img src="https://img.shields.io/badge/License-MIT-blue">
 
 
 
