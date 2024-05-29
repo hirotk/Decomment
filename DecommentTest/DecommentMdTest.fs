@@ -4,6 +4,7 @@ open NUnit.Framework
 open Decomment
     open ResultMd
 
+let tabLen = 4
 
 [<SetUp>]
 let Setup () =
@@ -280,6 +281,7 @@ let decommentTest expected src (extStr:string) exceptDocCmt =
         >>= fun ext ->
             DecommentMd.decomment
                 ext
+                tabLen
                 exceptDocCmt
                 src
     

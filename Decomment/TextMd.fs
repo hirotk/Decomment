@@ -194,6 +194,25 @@ let _removeTrailingSpaces : int32->Line ->
         | ex ->
             Error ex.Message
 
+
+let _removeTrailingChars : int32->Line ->
+        Result<Line,ErrMsg> =
+    fun tabLen line ->
+        try
+            valueLine line
+            |> createLineOrText
+            >>= replaceTabToSpace tabLen 
+            <&> valueLineOrText
+            <&> (fun s ->
+                    match Regex.IsMatch(s, "^(\\s*).*$") with
+                    | true -> Regex.Replace(s, "^(\\s*).*$", "$1")
+                    | false -> s                    
+                )
+            >>= createLine
+        with
+        | ex ->
+            Error ex.Message
+
                    
 let removeSpaces : int32->Text->bool ->
         Result<Text,ErrMsg> =
@@ -241,7 +260,7 @@ let removeEmptyLines : Text ->
                     |> fun lines ->
                         match lines.Length with
                         | 1 ->
-                            createLineOrText (valueLine lines.Head)
+                            createLineOrText (valueLine (List.head lines))
                         | _ ->
                             concatLines lines                    
                             >>= fun text ->

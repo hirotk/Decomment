@@ -70,7 +70,7 @@ let _main : string array -> unit =
         |> parseArgs
         >>= fun (path, ext, exceptDocCmt, replaceWithEmptyLine) ->
                 PathMd.readFile path
-                >>= DecommentMd.decomment ext exceptDocCmt 
+                >>= (DecommentMd.decomment ext tabLen exceptDocCmt) 
                 >>= TextMd.createLineOrText                    
                 >>= (fun lt ->
                         match lt with

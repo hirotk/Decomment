@@ -201,70 +201,107 @@ let private _getUnescapeQuoteFun : Extension ->
         | ex ->
             Error ex.Message
 
-        
+               
 let isStartOfComment : string->string*string option->string ->
-        Result<bool, ErrMsg> =
+        Result<bool*bool, ErrMsg> = // (isLineComment, isBlockComment)
     fun lineComment blockComment code ->
         try
-            match blockComment with
-            | bc1, Some bc2 ->
-                code.StartsWith lineComment ||
-                code.StartsWith bc1 ||
-                code.StartsWith bc2
-            | bc1, None ->            
-                code.StartsWith lineComment ||
-                code.StartsWith bc1
-            |> Ok
+            match code with
+            | c when c.StartsWith lineComment ->
+                Ok (true, false)
+            | _ ->                                        
+                match blockComment with
+                | bc1, Some bc2 when 
+                    code.StartsWith bc1 ||
+                    code.StartsWith bc2 ->
+                    Ok (false, true)
+                | bc1, None when      
+                    code.StartsWith bc1 ->
+                    Ok (false, true)
+                | _ ->
+                    Ok (false, false)
         with
         | ex ->
             Error ex.Message
-        
-                
+
 let isStartOfDocComment : string->string->string ->
-        Result<bool, ErrMsg> =
+        Result<bool*bool, ErrMsg> =
     fun lineDocComment blockDocComment code ->
         try
-            (code.StartsWith lineDocComment ||
-             code.StartsWith blockDocComment)
-            |> Ok
+            match code with
+            | c when c.StartsWith lineDocComment->
+                Ok (true, false)
+            | c when c.StartsWith blockDocComment ->
+                Ok (false, true)
+            | _ ->
+                Ok (false, false)
         with
         | ex ->
             Error ex.Message
-        
-        
+                
+   
 let createMatchEvaluator :
         bool->
-        string->
-        (string -> Result<bool,ErrMsg>)->
-        (string -> Result<bool,ErrMsg>)->
+        int32->
+        (string -> Result<bool*bool,ErrMsg>)->
+        (string -> Result<bool*bool,ErrMsg>)->
         Result<MatchEvaluator, ErrMsg> =
-    fun exceptDocComment startOfLineComment
-        isComment isDocComment ->
+    fun exceptDocComment tabLen
+        isComment2 isDocComment2 ->
         try
             let matcher =
                 fun (mc:Match) ->           
-                    (fun isDocCmt isCmt ->
-                        match exceptDocComment && isDocCmt,
-                            isCmt with
+                    (fun (isLineDocCmt, isBlkDocCmt) (isLineCmt, isBlkCmt) ->
+                        match exceptDocComment && (isLineDocCmt || isBlkDocCmt),
+                            (isLineCmt || isBlkCmt) with
                         | true, _ ->
-                            mc.Value
-                        | _, true when mc.Value.StartsWith(startOfLineComment) ->
-                            Environment.NewLine
-                        | _, true ->
-                            mc.Value.Split(Environment.NewLine)
-                            |> fun (sa:string array) ->
-                                Array.map
-                                    (fun line ->
-                                        Regex.Replace(line, "^(\\s*).*$", "$1")
-                                    )
-                                    sa
-                            |> fun (sa:string array) ->
-                                 String.Join(Environment.NewLine, sa)
+                            Ok mc.Value
+                        | _, true when isLineCmt ->
+                            Ok Environment.NewLine
+                        | _, true ->                                                
+                           TextMd.createLineOrText mc.Value
+                            >>= fun lt ->
+                                match lt with
+                                | LineTC l ->
+                                    TextMd._removeTrailingChars tabLen l
+                                    <&> TextMd.valueLine
+                                | LTextC t ->
+                                    TextMd.splitText t
+                                    <&> fun lines ->
+                                            List.map
+                                                (TextMd._removeTrailingChars tabLen)                                             
+                                                lines
+                                    <&>  fun results ->
+                                            match List.tryFind Result.isError results with
+                                            | Some err ->
+                                                    match err with
+                                                    | Error x -> Error x
+                                                    | _ -> failwith "Unreachable"                    
+                                            | None ->
+                                                let valueOk r =
+                                                   match r with
+                                                   | Ok x -> x
+                                                   | _ -> failwith "Unreachable"
+                                                Ok (List.map valueOk results)
+                                    |> join
+                                    >>= fun lines ->
+                                            match (TextMd.valueLine (List.last lines)) = String.Empty with
+                                            | true ->
+                                                List.take (List.length lines - 1) lines
+                                                |> Ok
+                                            | false ->
+                                                Ok lines
+
+                                    >>= fun lines ->
+                                        TextMd.concatLines lines
+                                        <&> TextMd.valueText                                        
+
                         | _ ->
-                            mc.Value
+                            Ok mc.Value
                     )
-                    <%> (isDocComment mc.Value)
-                    <*> (isComment mc.Value)                    
+                    <%> (isDocComment2 mc.Value)
+                    <*> (isComment2 mc.Value)
+                    |> join
                     |> fun res ->
                         match res with
                         | Ok ret ->
@@ -276,8 +313,8 @@ let createMatchEvaluator :
             |> Ok
         with
         | ex ->
-            Error ex.Message
-       
+            Error ex.Message        
+        
         
 let reReplace :
         RegexOptions->
@@ -308,17 +345,17 @@ let canHaveDocComment (ext:Extension) =
     | _ -> false
     
     
-let decomment : Extension->bool->string ->
+let decomment : Extension->int32->bool->string ->
         Result<string, ErrMsg> =
-    fun ext exceptDocCmt src ->
+    fun ext tabLen exceptDocCmt  src ->
         let isComment =
             isStartOfComment
                 (_getStartOfLineComment ext)
                 (_getStartOfBlockComment ext)            
-        
+                        
         let exceptDocCmt =
                 exceptDocCmt && canHaveDocComment ext
-        
+         
         let isDocComment =
             match exceptDocCmt with
             | true ->
@@ -326,8 +363,8 @@ let decomment : Extension->bool->string ->
                     (_getStartOfDocLineComment ext)
                     (_getStartOfDocBlockComment ext)
             | false ->
-                fun _ -> Ok false        
-
+                fun _ -> Ok (false, false)        
+                
         let re = _createCommentRegEx                    
                     ext
                     strRegEx
@@ -342,7 +379,7 @@ let decomment : Extension->bool->string ->
         let replaceRes =
                 createMatchEvaluator
                     exceptDocCmt
-                    (_getStartOfLineComment ext)
+                    tabLen
                     isComment
                     isDocComment
                 <&> fun matchEval ->                            
@@ -351,6 +388,7 @@ let decomment : Extension->bool->string ->
                         matchEval
                         re
         
+                
         (fun escape replace unescape -> 
             createLineOrText src
             >>= fun lineOrText ->
