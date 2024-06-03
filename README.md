@@ -6,6 +6,9 @@
 This CLI tool removes comments from C#, F#, C++, Java, JavaScript, OCaml, Haskell, 
 and Python source code. 
 
+## Demo
+<img src="https://github.com/hirotk/Decomment/assets/6882458/5d5bfaf8-fa15-4a17-9101-14020cc6240c" alt="demo" style="max-width:100%">
+
 
 ## Usage
 Remove all comments.
